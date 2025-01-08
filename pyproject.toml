@@ -1,0 +1,37 @@
+[project]
+name = "wikibot"
+description = ""
+authors = [
+    {name = "Framewiki.net",email = "admin@framewiki.net"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+]
+
+[tool.poetry]
+package-mode = false
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.10.0"
+flake8 = "^7.1.1"
+isort = "^5.13.2"
+
+[tool.black]
+line-length = 100
+target-version = ['py313']
+include = '\.pyi'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 100
+include_trailing_comma = "True"
+force_grid_wrap = 0
+use_parentheses = "True"
+combine_as_imports = "True"
+force_alphabetical_sort_within_sections = "True"
+ensure_newline_before_comments = "True"
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+lines_after_imports = 2
