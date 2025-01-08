@@ -1,0 +1,5 @@
+name: Wikibot
+description: ""
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
