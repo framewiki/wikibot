@@ -14,6 +14,6 @@ Rhoncus consectetur varius himenaeos ante dis mattis. Suspendisse vivamus nam vo
 
 # References
 [^1]: This is a footnote with no links.
-[^2]: <https://example.com> [Archived](https://web.archive.org/web/20250106141823/http://example.com/) 
+[^2]: <http://example.com>
 [^3]: <https://frame.work> [Archived](https://web.archive.org/web/20250108214200/https://frame.work/)
 [^4]: <https://framewiki.net/this-page-does-not-exist>
