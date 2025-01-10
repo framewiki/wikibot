@@ -1,12 +1,33 @@
 import logging
 import re
 import requests
+import threading
+import time
 from pathlib import Path
 
 import bs4
 import markdown
 
 logger = logging.getLogger(__name__)
+
+rate_limit_lock = threading.Lock()
+
+def create_archive(url: str) -> bool | None:
+    while True:
+        try:
+            rate_limit_lock.acquire()
+            rate_limit_lock.release()
+            archive_url = requests.get(f"https://web.archive.org/save/{url}", timeout=600).url
+            logger.info(f"Created new archive link for {url}")
+            return archive_url
+        except requests.RequestException as error:
+            if error.errno == 111:
+                logger.info(f"Rate-limited while creating new archive link for {url}. Waiting.")
+                rate_limit_lock.acquire()
+                time.sleep(300)
+                rate_limit_lock.release()
+            else:
+                logger.error(f"Failed to create a new archive link for {url}: {error}")
 
 
 def check_citations(page: Path) -> bool:
@@ -69,13 +90,7 @@ def check_citations(page: Path) -> bool:
             ok = False
 
         if ok:
-            try:
-                archive_url = requests.get(f"https://web.archive.org/save/{url}", timeout=600).url
-                logger.info(f"Created new archive link for {url}")
-            except requests.RequestException:
-                logger.error(f"Failed to create a new archive link for {url}")
-                continue
-                # TODO - Fallback to finding an existing archive link.
+            create_archive(url)
 
         # If the link is broken, check if there is an existing archive.
         else:
