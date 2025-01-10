@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 rate_limit_lock = threading.Lock()
 
-def create_archive(url: str) -> bool | None:
+def create_archive(url: str) -> str | None:
     while True:
         try:
             rate_limit_lock.acquire()
@@ -29,9 +29,24 @@ def create_archive(url: str) -> bool | None:
             else:
                 logger.error(f"Failed to create a new archive link for {url}: {error}")
                 return
+            
+def get_archive(url: str) -> str | None:
+    try:
+        archive = requests.get(f"https://archive.org/wayback/available?url={url}")
+        snapshots = archive.json()["archived_snapshots"]
+        closest = snapshots.get("closest")
+        if closest and closest["available"] is True:
+            archive_url = closest["url"]
+            logger.info(f"Found existing archive link for {url}")
+            return archive_url
+        else:
+            return
+    except requests.RequestException:
+        logger.error(f"Failed to search for archived copy of broken link to {url}")
+        return
 
 
-def check_citations(page: Path) -> bool:
+def check_citations(page: Path) -> None:
     """Checks that every footnote on a given page has a working primary link and an archive link.
 
     - If a footnote has an archive link already, does nothing.
@@ -43,11 +58,9 @@ def check_citations(page: Path) -> bool:
     page, logs a warning.
 
     :param Path page: a Path object pointing to the page that needs processing.
-    :return: True if the page was modified; otherwise False
-    :rtype: bool
+    :rtype: None
     """
 
-    file_changed = False
     # Read markdown, strip frontmatter, convert to html for parsing.
     contents = page.read_text()
     contents = re.sub(r"(?s)^---\n.*?\n---\n", "", contents, count=1)
@@ -90,28 +103,18 @@ def check_citations(page: Path) -> bool:
         except requests.RequestException:
             ok = False
 
-        if ok:
-            archive_url = create_archive(url)
-            if archive_url is None:
-                continue
+        #if ok:
+        #    archive_url = create_archive(url)
+        #    if archive_url is None:
+        #        continue
 
-        # If the link is broken, check if there is an existing archive.
-        else:
-            try:
-                archive = requests.get(f"https://archive.org/wayback/available?url={url}")
-                snapshots = archive.json()["archived_snapshots"]
-                closest = snapshots.get("closest")
-                if closest and closest["available"] is True:
-                    archive_url = closest["url"]
-                    logger.info(f"Found existing archive link for {url}")
-                else:
-                    logger.warning(
-                        f"Footnote in {page.name} contains broken link to {url}. No archived copy is available."
-                    )
-                    continue
-            except requests.RequestException:
-                logger.error(f"Failed to search for archived copy of broken link to {url}")
-                continue
+        archive_url = get_archive(url)
+        if archive_url is None:
+            if ok:
+                logger.info(f"No archived copy of {url} is available.")
+            else:
+                logger.warning(f"Footnote in {page.name} contains broken link to {url}. No archived copy is available.")
+            continue
 
         # Put archive_url on the page.
         with page.open("r") as file:
@@ -123,5 +126,3 @@ def check_citations(page: Path) -> bool:
             modified_lines.append(line)
         with page.open("w") as file:
             file.writelines(modified_lines)
-        file_changed = True
-    return file_changed

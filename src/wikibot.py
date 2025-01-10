@@ -30,13 +30,8 @@ def main() -> None:
 
     # Apply each check to every page.
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = list(executor.map(process_page, pages))
+        executor.map(process_page, pages)
 
-    # Set GitHub Action output.
-    github_output = os.getenv("GITHUB_OUTPUT")
-    if github_output is None:
-        github_output = ""
-    os.environ["GITHUB_OUTPUT"] = github_output + f"files_changed={any(results)}"
 
 
 if __name__ == "__main__":
