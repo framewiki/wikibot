@@ -43,8 +43,8 @@ def find_archive(url: str) -> str | None:
             return archive_url
         else:
             return
-    except requests.RequestException:
-        logger.error(f"Failed to search for archived copy of {url}")
+    except requests.RequestException as error:
+        logger.error(f"Failed to search for archived copy of {url}: {error}")
         return
 
 
