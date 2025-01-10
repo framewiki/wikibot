@@ -120,11 +120,7 @@ def check_citations(page: Path) -> None:
 
         url = links[0].get("href")
 
-        # THIS IS FOR DEBUGGING ONLY
-        logger.warning(f"{page.name}: {url}")
-        continue
-
-        logger.debug(f"Checking citation {url}")
+        logger.debug(f"Checking citation {url} in {page.name}")
 
         # Check if there is an archive link.
         archive_link_present = False
@@ -154,7 +150,7 @@ def check_citations(page: Path) -> None:
 
         # If no archive is available and the primary link is not broken, create a new archive.
         if archive_url is None and link_ok:
-            logger.debug(f"Attempting to create archive of {url}.")
+            logger.debug(f"Failed to locate archive of {url}. Attempting to create.")
             archive_url = create_archive(url)
 
         # If no archive is available, log it.
@@ -165,15 +161,15 @@ def check_citations(page: Path) -> None:
                 logger.warning(
                     f"Footnote in {page.name} contains broken link to {url}. No archived copy is available."
                 )
-            continue
 
-        # Put archive_url on the page.
-        with page.open("r") as file:
-            lines = file.readlines()
-        modified_lines = []
-        for line in lines:
-            if line.startswith("[^") and re.search(rf"\b{re.escape(url)}\b", line):
-                line = f"{line.rstrip()} [Archived]({archive_url}) \n"
-            modified_lines.append(line)
-        with page.open("w") as file:
-            file.writelines(modified_lines)
+        if archive_url:
+            # Put archive_url on the page.
+            with page.open("r") as file:
+                lines = file.readlines()
+            modified_lines = []
+            for line in lines:
+                if line.startswith("[^") and re.search(rf"\b{re.escape(url)}\b", line):
+                    line = f"{line.rstrip()} [Archived]({archive_url}) \n"
+                modified_lines.append(line)
+            with page.open("w") as file:
+                file.writelines(modified_lines)

@@ -21,14 +21,14 @@ def main() -> None:
         pr_handler = logging.FileHandler("/github/workspace/pr.txt")
         pr_handler.setLevel(logging.WARNING)
         pr_handler.setFormatter(
-            logging.Formatter("- %(levelname)s: %(message)s")
+            logging.Formatter("- %(message)s")
         )
         handlers.append(pr_handler)   
 
     stdout_handler = logging.StreamHandler(sys.stdout)
-    stdout_handler.setLevel(logging.INFO)
+    stdout_handler.setLevel(logging.DEBUG)
     stdout_handler.setFormatter(
-        logging.Formatter("%(asctime)s %(name)s | %(levelname)s: %(message)s", "%Y-%m-%d %H:%M:%S")
+        logging.Formatter("%(name)s | %(levelname)s: %(message)s")
     )
     handlers.append(stdout_handler)
 
