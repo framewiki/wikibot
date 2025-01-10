@@ -35,14 +35,19 @@ def create_archive(url: str) -> str | None:
 def find_archive(url: str) -> str | None:
     try:
         archive = requests.get(f"https://archive.org/wayback/available?url={url}")
-        snapshots = archive.json()["archived_snapshots"]
-        closest = snapshots.get("closest")
-        if closest and closest["available"] is True:
-            archive_url = closest["url"]
-            logger.info(f"Found existing archive link for {url}")
-            return archive_url
+        if archive.ok:
+            snapshots = archive.json()["archived_snapshots"]
+            closest = snapshots.get("closest")
+            if closest and closest["available"] is True:
+                archive_url = closest["url"]
+                logger.info(f"Found existing archive link for {url}")
+                return archive_url
+            else:
+                return
         else:
-            return
+            logger.error(
+                f"Failed to search for archived copy of {url}: Request returned HTTP status code {archive.status_code}"
+            )
     except requests.RequestException as error:
         logger.error(f"Failed to search for archived copy of {url}: {error}")
         return
