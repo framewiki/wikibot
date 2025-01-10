@@ -29,7 +29,7 @@ def check_citations(page: Path) -> bool:
     # Read markdown, strip frontmatter, convert to html for parsing.
     contents = page.read_text()
     contents = re.sub(r"(?s)^---\n.*?\n---\n", "", contents, count=1)
-    contents = markdown.markdown(contents, extensions=["footnotes"])
+    contents = markdown.markdown(contents, extensions=["fenced_code", "footnotes"])
 
     # Loop over every footnote.
     doc = bs4.BeautifulSoup(contents, features="html.parser")
