@@ -28,6 +28,7 @@ def create_archive(url: str) -> bool | None:
                 rate_limit_lock.release()
             else:
                 logger.error(f"Failed to create a new archive link for {url}: {error}")
+                return
 
 
 def check_citations(page: Path) -> bool:
@@ -90,7 +91,9 @@ def check_citations(page: Path) -> bool:
             ok = False
 
         if ok:
-            create_archive(url)
+            archive_url = create_archive(url)
+            if archive_url is None:
+                continue
 
         # If the link is broken, check if there is an existing archive.
         else:
