@@ -63,23 +63,34 @@ def check_citations(page: Path) -> bool:
         logger.debug(f"No archive link found in citation {url}. Attempting fix.")
 
         # Check if the link is broken. If not, create a new archive.
-        if requests.get(url).ok:
-            archive_url = requests.get(f"https://web.archive.org/save/{url}", timeout=600).url
-            logger.info(f"Created new archive link for {url}")
+        try:
+            ok = requests.get(url).ok
+        except requests.RequestException:
+            ok = False
+
+        if ok:
+            try:
+                archive_url = requests.get(f"https://web.archive.org/save/{url}", timeout=600).url
+                logger.info(f"Created new archive link for {url}")
+            except requests.RequestException:
+                logger.error(f"Failed to create a new archive link for {url}")
 
         # If the link is broken, check if there is an existing archive.
         else:
-            archive = requests.get(f"https://archive.org/wayback/available?url={url}")
-            snapshots = archive.json()["archived_snapshots"]
-            closest = snapshots.get("closest")
-            if closest and closest["available"] is True:
-                archive_url = closest["url"]
-                logger.info(f"Found existing archive link for {url}")
-            else:
-                logger.warning(
-                    f"Footnote in {page.name} contains broken link to {url}. No archived copy is available."
-                )
-                continue
+            try:
+                archive = requests.get(f"https://archive.org/wayback/available?url={url}")
+                snapshots = archive.json()["archived_snapshots"]
+                closest = snapshots.get("closest")
+                if closest and closest["available"] is True:
+                    archive_url = closest["url"]
+                    logger.info(f"Found existing archive link for {url}")
+                else:
+                    logger.warning(
+                        f"Footnote in {page.name} contains broken link to {url}. No archived copy is available."
+                    )
+                    continue
+            except requests.RequestException:
+                logger.error(f"Failed to search for archived copy of broken link to {url}")
 
         # Put archive_url on the page.
         with page.open("r") as file:
