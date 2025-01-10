@@ -27,10 +27,10 @@ def main() -> None:
     for page in pages:
         logger.info(f"Processing {page.name}")
         citations_changed = citations.check_citations(page)
-        
+
         if citations_changed is True:
             files_changed = True
-    
+
         github_output = os.getenv("GITHUB_OUTPUT")
         if github_output is None:
             github_output = ""
