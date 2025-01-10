@@ -30,7 +30,7 @@ def create_archive(url: str) -> str | None:
                 logger.error(f"Failed to create a new archive link for {url}: {error}")
                 return
             
-def get_archive(url: str) -> str | None:
+def find_archive(url: str) -> str | None:
     try:
         archive = requests.get(f"https://archive.org/wayback/available?url={url}")
         snapshots = archive.json()["archived_snapshots"]
@@ -42,7 +42,7 @@ def get_archive(url: str) -> str | None:
         else:
             return
     except requests.RequestException:
-        logger.error(f"Failed to search for archived copy of broken link to {url}")
+        logger.error(f"Failed to search for archived copy of {url}")
         return
 
 
@@ -97,18 +97,21 @@ def check_citations(page: Path) -> None:
 
         logger.debug(f"No archive link found in citation {url}. Attempting fix.")
 
-        # Check if the link is broken. If not, create a new archive.
+        # Check if the link is broken.
         try:
             ok = requests.get(url).ok
         except requests.RequestException:
             ok = False
 
+        # If the link is not broken, try to create a new archive.
         #if ok:
         #    archive_url = create_archive(url)
-        #    if archive_url is None:
-        #        continue
 
-        archive_url = get_archive(url)
+        # If the link is broken or a new archive could not be created, try to find an existing one.
+        if archive_url is None:
+            archive_url = find_archive(url)
+        
+        # If no archive is available, log it.
         if archive_url is None:
             if ok:
                 logger.info(f"No archived copy of {url} is available.")
