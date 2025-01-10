@@ -26,7 +26,7 @@ def main() -> None:
         handlers.append(pr_handler)   
 
     stdout_handler = logging.StreamHandler(sys.stdout)
-    stdout_handler.setLevel(logging.DEBUG)
+    stdout_handler.setLevel(logging.INFO)
     stdout_handler.setFormatter(
         logging.Formatter("%(name)s | %(levelname)s: %(message)s")
     )
