@@ -30,7 +30,7 @@ def create_archive(url: str) -> str | None:
         logger.info(f"Created new archive link for {url}")
         return archive_url
     except requests.ConnectionError as error:
-        if error.errno == 111:
+        if error.args[0].reason.errno == 111:
             logger.info(f"Rate-limited while creating new archive link for {url}. Waiting.")
             rate_limit_lock.acquire()
             time.sleep(300)
