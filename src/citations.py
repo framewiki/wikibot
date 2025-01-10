@@ -22,26 +22,28 @@ def check_citations(page: Path) -> None:
         logger.info(f"No footnotes found in {page.name}")
         return
     for note in footnotes.find_all("li"):
-        links = note.find_all("a", href=lambda href: href and href.startswith(("http://", "https://")))
+        links = note.find_all(
+            "a", href=lambda href: href and href.startswith(("http://", "https://"))
+        )
 
         # Make sure there is at least one link.
         if len(links) == 0:
             logger.warning(f"Footnote in {page.name} has no links. Skipping.")
             continue
-        
+
         url = links[0].get("href")
         logger.debug(f"Checking citation {url}")
-    
+
         # Check if there is an archive link.
         archive_link_present = False
         for link in links:
             if link.get("href").startswith("https://web.archive.org"):
-                archive_link_present = True # If there is an archive link, the footnote is fine.
+                archive_link_present = True  # If there is an archive link, the footnote is fine.
                 logger.debug(f"Found archive link in citation {url}")
                 break
         if archive_link_present:
             continue
-        
+
         logger.debug(f"No archive link found in citation {url}. Attempting fix.")
 
         # Check if the link is broken. If not, create a new archive.
@@ -58,16 +60,18 @@ def check_citations(page: Path) -> None:
                 archive_url = closest["url"]
                 logger.info(f"Found existing archive link for {url}")
             else:
-                logger.warning(f"Footnote in {page.name} contains broken link to {url}. No archived copy is available.")
+                logger.warning(
+                    f"Footnote in {page.name} contains broken link to {url}. No archived copy is available."
+                )
                 continue
-        
+
         # Put archive_url on the page.
-        with page.open('r') as file:
+        with page.open("r") as file:
             lines = file.readlines()
         modified_lines = []
         for line in lines:
             if url in line:
                 line = f"{line.rstrip()} [Archived]({archive_url}) \n"
             modified_lines.append(line)
-        with page.open('w') as file:
+        with page.open("w") as file:
             file.writelines(modified_lines)

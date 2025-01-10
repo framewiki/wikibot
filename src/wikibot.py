@@ -17,10 +17,10 @@ def main() -> None:
     else:
         workspace = "./test_wiki"
         logger.debug("Using development workspace")
-        
+
     repo = Path(workspace)
     pages = list(repo.glob("**/*.md"))
-    
+
     for page in pages:
         logger.info(f"Processing {page.name}")
         citations.check_citations(page)
