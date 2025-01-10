@@ -74,6 +74,7 @@ def check_citations(page: Path) -> bool:
                 logger.info(f"Created new archive link for {url}")
             except requests.RequestException:
                 logger.error(f"Failed to create a new archive link for {url}")
+                continue
                 # TODO - Fallback to finding an existing archive link.
 
         # If the link is broken, check if there is an existing archive.
@@ -92,6 +93,7 @@ def check_citations(page: Path) -> bool:
                     continue
             except requests.RequestException:
                 logger.error(f"Failed to search for archived copy of broken link to {url}")
+                continue
 
         # Put archive_url on the page.
         with page.open("r") as file:
