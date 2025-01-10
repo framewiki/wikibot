@@ -88,7 +88,7 @@ def check_citations(page: Path) -> None:
 
     - If a footnote has an archive link already, does nothing.
     - If a footnote has no archive link, attempts to add a link to an existing archive.
-    - If a footnote has no archive link and no existing archive link is available, but the primary link is functional, 
+    - If a footnote has no archive link and no existing archive link is available, but the primary link is functional,
     creates and adds a link to a new archive snapshot.
     - If a footnote has no archive link, the primary link is broken, and there is no archive of the
     page, logs a warning.
