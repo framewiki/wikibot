@@ -119,6 +119,11 @@ def check_citations(page: Path) -> None:
             continue
 
         url = links[0].get("href")
+
+        # THIS IS FOR DEBUGGING ONLY
+        logger.warning(f"{page.name}: {url}")
+        continue
+
         logger.debug(f"Checking citation {url}")
 
         # Check if there is an archive link.
@@ -137,6 +142,7 @@ def check_citations(page: Path) -> None:
         logger.debug(f"No archive link found in citation {url}. Attempting fix.")
 
         # Try to find an existing archive.
+        logger.debug(f"Attempting to locate archive of {url}.")
         archive_url = find_archive(url)
 
         # Check if the primary link is broken.
@@ -144,9 +150,11 @@ def check_citations(page: Path) -> None:
             link_ok = requests.get(url).ok
         except requests.RequestException:
             link_ok = False
+        logger.debug(f"Link {url} is broken.")
 
         # If no archive is available and the primary link is not broken, create a new archive.
         if archive_url is None and link_ok:
+            logger.debug(f"Attempting to create archive of {url}.")
             archive_url = create_archive(url)
 
         # If no archive is available, log it.
