@@ -10,9 +10,10 @@ ENV POETRY_NO_INTERACTION=1 \
 WORKDIR /app
 
 COPY pyproject.toml poetry.lock ./
-COPY . .
-
 ENV PRODUCTION = true
 RUN poetry install --without dev && rm -rf $POETRY_CACHE_DIR
 
-ENTRYPOINT ["poetry", "run", "python" "src/wikibot.py"]
+COPY . .
+RUN ["chmod", "+x", "/app/entrypoint.sh"]
+
+ENTRYPOINT ["/app/entrypoint.sh"]
