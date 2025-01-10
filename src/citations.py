@@ -35,7 +35,7 @@ def check_citations(page: Path) -> bool:
     doc = bs4.BeautifulSoup(contents, features="html.parser")
     footnotes = doc.find("div", class_="footnote")
     if not footnotes:
-        logger.info(f"No footnotes found in {page.name}")
+        logger.debug(f"No footnotes found in {page.name}")
         return
     for note in footnotes.find_all("li"):
         links = note.find_all(
@@ -74,6 +74,7 @@ def check_citations(page: Path) -> bool:
                 logger.info(f"Created new archive link for {url}")
             except requests.RequestException:
                 logger.error(f"Failed to create a new archive link for {url}")
+                # TODO - Fallback to finding an existing archive link.
 
         # If the link is broken, check if there is an existing archive.
         else:
