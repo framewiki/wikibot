@@ -103,6 +103,8 @@ def check_citations(page: Path) -> None:
         except requests.RequestException:
             ok = False
 
+        archive_url = None
+
         # If the link is not broken, try to create a new archive.
         #if ok:
         #    archive_url = create_archive(url)
