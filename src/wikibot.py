@@ -21,9 +21,20 @@ def main() -> None:
     repo = Path(workspace)
     pages = list(repo.glob("**/*.md"))
 
+    files_changed = False
+
+    # Apply each check to every page.
     for page in pages:
         logger.info(f"Processing {page.name}")
-        citations.check_citations(page)
+        citations_changed = citations.check_citations(page)
+        
+        if citations_changed is True:
+            files_changed = True
+    
+        github_output = os.getenv("GITHUB_OUTPUT")
+        if github_output is None:
+            github_output = ""
+        os.environ["GITHUB_OUTPUT"] = github_output + f"files_changed={files_changed}"
 
 
 if __name__ == "__main__":

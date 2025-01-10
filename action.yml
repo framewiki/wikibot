@@ -1,8 +1,9 @@
 name: Wikibot
 author: Framewiki
 description: 'Automations for maintaining Framewiki'
+outputs:
+  files_changed:
+    description: 'Whether or not Wikibot made any changes.'
 runs:
   using: 'docker'
   image: 'Dockerfile'
-  args:
-    - ${{ inputs.who-to-greet }}

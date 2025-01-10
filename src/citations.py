@@ -9,7 +9,23 @@ import markdown
 logger = logging.getLogger(__name__)
 
 
-def check_citations(page: Path) -> None:
+def check_citations(page: Path) -> bool:
+    """Checks that every footnote on a given page has a working primary link and an archive link.
+
+    - If a footnote has an archive link already, does nothing.
+    - If a footnote has no archive link but has a functional primary link, creates a new archive
+    snapshot and adds a link to it.
+    - If a footnote has no archive link and the primary link is broken, attempts to add a link to
+    an existing archive.
+    - If a footnote has no archive link, the primary link is broken, and there is no archive of the
+    page, logs a warning.
+
+    :param Path page: a Path object pointing to the page that needs processing.
+    :return: True if the page was modified; otherwise False
+    :rtype: bool
+    """
+
+    file_changed = False
     # Read markdown, strip frontmatter, convert to html for parsing.
     contents = page.read_text()
     contents = re.sub(r"(?s)^---\n.*?\n---\n", "", contents, count=1)
@@ -41,7 +57,7 @@ def check_citations(page: Path) -> None:
                 archive_link_present = True  # If there is an archive link, the footnote is fine.
                 logger.debug(f"Found archive link in citation {url}")
                 break
-        if archive_link_present:
+        if archive_link_present is True:
             continue
 
         logger.debug(f"No archive link found in citation {url}. Attempting fix.")
@@ -75,3 +91,5 @@ def check_citations(page: Path) -> None:
             modified_lines.append(line)
         with page.open("w") as file:
             file.writelines(modified_lines)
+        file_changed = True
+    return file_changed
