@@ -9,9 +9,10 @@ import citations
 logger = logging.getLogger(__name__)
 
 
-def process_page(page:Path) -> bool:
+def process_page(page: Path) -> bool:
     logger.info(f"Processing {page.name}")
     return citations.check_citations(page)
+
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO)
