@@ -90,7 +90,8 @@ def check_citations(page: Path) -> None:
         # Check if there is an archive link.
         archive_link_present = False
         for link in links:
-            if link.get("href").startswith("https://web.archive.org"):
+            link_url = link.get("href")
+            if link_url.startswith("https://web.archive.org") or link_url.startswith("http://web.archive.org"):
                 archive_link_present = True  # If there is an archive link, the footnote is fine.
                 logger.debug(f"Found archive link in citation {url}")
                 break
