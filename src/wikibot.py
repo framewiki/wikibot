@@ -31,10 +31,11 @@ def main() -> None:
         if citations_changed is True:
             files_changed = True
 
-        github_output = os.getenv("GITHUB_OUTPUT")
-        if github_output is None:
-            github_output = ""
-        os.environ["GITHUB_OUTPUT"] = github_output + f"files_changed={files_changed}"
+    # Set GitHub Action output.
+    github_output = os.getenv("GITHUB_OUTPUT")
+    if github_output is None:
+        github_output = ""
+    os.environ["GITHUB_OUTPUT"] = github_output + f"files_changed={files_changed}"
 
 
 if __name__ == "__main__":
