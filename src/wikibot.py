@@ -33,6 +33,5 @@ def main() -> None:
         executor.map(process_page, pages)
 
 
-
 if __name__ == "__main__":
     main()

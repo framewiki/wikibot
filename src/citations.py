@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 rate_limit_lock = threading.Lock()
 
+
 def create_archive(url: str) -> str | None:
     while True:
         try:
@@ -29,7 +30,8 @@ def create_archive(url: str) -> str | None:
             else:
                 logger.error(f"Failed to create a new archive link for {url}: {error}")
                 return
-            
+
+
 def find_archive(url: str) -> str | None:
     try:
         archive = requests.get(f"https://archive.org/wayback/available?url={url}")
@@ -106,19 +108,21 @@ def check_citations(page: Path) -> None:
         archive_url = None
 
         # If the link is not broken, try to create a new archive.
-        #if ok:
+        # if ok:
         #    archive_url = create_archive(url)
 
         # If the link is broken or a new archive could not be created, try to find an existing one.
         if archive_url is None:
             archive_url = find_archive(url)
-        
+
         # If no archive is available, log it.
         if archive_url is None:
             if ok:
                 logger.info(f"No archived copy of {url} is available.")
             else:
-                logger.warning(f"Footnote in {page.name} contains broken link to {url}. No archived copy is available.")
+                logger.warning(
+                    f"Footnote in {page.name} contains broken link to {url}. No archived copy is available."
+                )
             continue
 
         # Put archive_url on the page.
