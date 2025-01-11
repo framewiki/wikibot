@@ -26,13 +26,13 @@ def main() -> None:
         handlers.append(pr_handler)   
 
     stdout_handler = logging.StreamHandler(sys.stdout)
-    stdout_handler.setLevel(logging.INFO)
+    stdout_handler.setLevel(logging.DEBUG)
     stdout_handler.setFormatter(
         logging.Formatter("%(name)s | %(levelname)s: %(message)s")
     )
     handlers.append(stdout_handler)
 
-    logging.basicConfig(level=logging.INFO, handlers=handlers)
+    logging.basicConfig(level=logging.DEBUG, handlers=handlers)
 
     # Get all markdown files from workspace.
     if os.environ.get("PRODUCTION"):

@@ -140,6 +140,8 @@ def check_citations(page: Path) -> None:
         # Try to find an existing archive.
         logger.debug(f"Attempting to locate archive of {url}.")
         archive_url = find_archive(url)
+        if archive_url is not None:
+            logger.debug(f"Found archive link {archive_url} for primary url {url}")
 
         # Check if the primary link is broken.
         try:
@@ -156,13 +158,13 @@ def check_citations(page: Path) -> None:
         # If no archive is available, log it.
         if archive_url is None:
             if link_ok:
-                logger.info(f"No archived copy of {url} is available.")
+                logger.info(f"No archived copy of {url} is available and none could be created.")
             else:
                 logger.warning(
                     f"Footnote in {page.name} contains broken link to {url}. No archived copy is available."
                 )
-
-        if archive_url:
+        else:
+            logger.debug(f"Writing archive url {archive_url} to {page.name}")
             # Put archive_url on the page.
             with page.open("r") as file:
                 lines = file.readlines()
