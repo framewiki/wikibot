@@ -169,11 +169,17 @@ def check_citations(page: Path) -> None:
             with page.open("r") as file:
                 lines = file.readlines()
             modified_lines = []
+            wrote = False
             for line in lines:
                 if line.startswith("[^") and re.search(
                     rf"(?<=[\s<\[\(]){re.escape(url)}(?=[\s>\]\)])", line
                 ):
                     line = f"{line.rstrip()} [Archived]({archive_url}) \n"
+                    wrote = True
                 modified_lines.append(line)
             with page.open("w") as file:
                 file.writelines(modified_lines)
+            if wrote is False:
+                logger.ERROR(f"Failed to write {archive_url} to {page.name} for primary link {url}")
+            else:
+                logger.debug(f"Wrote {archive_url} to {page.name} for primary link {url}")
