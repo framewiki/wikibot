@@ -20,16 +20,12 @@ def main() -> None:
     if os.environ.get("PRODUCTION"):
         pr_handler = logging.FileHandler("/github/workspace/pr.txt")
         pr_handler.setLevel(logging.WARNING)
-        pr_handler.setFormatter(
-            logging.Formatter("- %(message)s")
-        )
-        handlers.append(pr_handler)   
+        pr_handler.setFormatter(logging.Formatter("- %(message)s"))
+        handlers.append(pr_handler)
 
     stdout_handler = logging.StreamHandler(sys.stdout)
     stdout_handler.setLevel(logging.DEBUG)
-    stdout_handler.setFormatter(
-        logging.Formatter("%(name)s | %(levelname)s: %(message)s")
-    )
+    stdout_handler.setFormatter(logging.Formatter("%(name)s | %(levelname)s: %(message)s"))
     handlers.append(stdout_handler)
 
     logging.basicConfig(level=logging.DEBUG, handlers=handlers)

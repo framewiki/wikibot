@@ -170,7 +170,9 @@ def check_citations(page: Path) -> None:
                 lines = file.readlines()
             modified_lines = []
             for line in lines:
-                if line.startswith("[^") and re.search(rf'(?<=[\s<\[\(]){re.escape(url)}(?=[\s>\]\)])', line):
+                if line.startswith("[^") and re.search(
+                    rf"(?<=[\s<\[\(]){re.escape(url)}(?=[\s>\]\)])", line
+                ):
                     line = f"{line.rstrip()} [Archived]({archive_url}) \n"
                 modified_lines.append(line)
             with page.open("w") as file:
