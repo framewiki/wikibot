@@ -34,6 +34,8 @@ def create_archive(url: str) -> str | None:
     except requests.RequestException as error:
         logger.info(f"Failed to capture archive of {url}: Encountered an error while creating capture job: {error}")
         return
+    
+    logger.debug(req.json())
 
     job_id = req.json()["job_id"]
 
