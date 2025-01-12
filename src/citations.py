@@ -3,6 +3,7 @@ import re
 import requests
 import time
 from pathlib import Path
+import os
 
 import bs4
 import markdown
@@ -22,7 +23,8 @@ def create_archive(url: str) -> str | None:
     :return: None if an archive could not be created. Otherwise, an archive.org URL.
     """
     headers = {
-        "Accept": "application/json"
+        "Accept": "application/json",
+        "authorization": f"LOW {os.getenv("ARCHIVE_ACCESS_KEY")}:{os.getenv("ARCHIVE_SECRET_KEY")}"
     }
     options = "?capture_outlinks=1&skip_first_archive=1"
 
