@@ -145,10 +145,13 @@ def check_citations(page: Path) -> None:
 
         # Check if the primary link is broken.
         try:
-            link_ok = requests.get(url).ok
-        except requests.RequestException:
+            req = requests.get(url)
+            link_ok = req.ok
+            if link_ok is False:
+                logger.debug(f"Link {url} is broken. Server responded {req.status_code}")
+        except requests.RequestException as error:
             link_ok = False
-        logger.debug(f"Link {url} is broken.")
+            logger.debug(f"Link {url} is broken. Request raised exception: {error}")
 
         # If no archive is available and the primary link is not broken, create a new archive.
         if archive_url is None and link_ok:
@@ -180,6 +183,6 @@ def check_citations(page: Path) -> None:
             with page.open("w") as file:
                 file.writelines(modified_lines)
             if wrote is False:
-                logger.ERROR(f"Failed to write {archive_url} to {page.name} for primary link {url}")
+                logger.error(f"Failed to write {archive_url} to {page.name} for primary link {url}")
             else:
                 logger.debug(f"Wrote {archive_url} to {page.name} for primary link {url}")
