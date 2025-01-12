@@ -35,13 +35,20 @@ def create_archive(url: str) -> str | None:
     # Tell Archive.org to queue a crawl and get the Job ID of it.
     try:
         req = requests.post(f"https://web.archive.org/save", data=data, headers=headers)
+        response = req.json()
     except requests.RequestException as error:
         logger.info(f"Failed to capture archive of {url}: Encountered an error while creating capture job: {error}")
         return
     
-    logger.debug(req.json())
+    logger.debug(response)
 
-    job_id = req.json()["job_id"]
+    job_id = response.get("job_id")
+    if job_id is None:
+        if response.get("status") == "error":
+            logger.warning(f"Failed to capture archive of {url}. Wayback Machine reported {response.get("status_ext")} with the following message: {response.get("message")}")
+        else:
+            logger.warning(f"Failed to capture archive of {url}. Bad response from Wayback Machine.")
+        return
 
     # Check the job status until completed.
     status = "pending"
