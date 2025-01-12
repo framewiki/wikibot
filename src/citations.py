@@ -33,20 +33,16 @@ def create_archive(url: str) -> str | None:
             if wait_time is None:
                 wait_time = 10
             logger.info(
-                f"Rate limited while attempting to create archive for {url}. Waiting for {wait_time} seconds."
+                f"Rate limited while attempting to create archive for {url}. Retrying in {wait_time} seconds."
             )
             time.sleep(wait_time)
             return create_archive(url)
-    except requests.ConnectionError as error:
-        if error.args[0].reason.errno == 111:
-            logger.info(
-                f"Connection refused while while attempting to create archive for {url}. May be rate limited. Waiting for 10 seconds."
-            )
-            time.sleep(10)
-            return create_archive(url)
-        else:
-            logger.error(f"Failed to create a new archive link for {url}: {error}")
-            return
+    except requests.ConnectTimeout as error:
+        logger.info(
+            f"Connection timed out while attempting to create archive for {url}. This usually indicates a rate limit. Retrying in 10 seconds."
+        )
+        time.sleep(10)
+        return create_archive(url)
     except requests.RequestException as error:
         logger.error(f"Failed to create a new archive link for {url}: {error}")
         return
