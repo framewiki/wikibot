@@ -14,37 +14,44 @@ def create_archive(url: str) -> str | None:
     """Captures a new archive of the provided URL on the Archive.org Wayback Machine and returns
     the URL to it.
 
-    If the rate limit kicks in, retries infinitely (until the recursion limit) after the suggested
-    amount of time (or every 10 seconds if no Retry-After header is provided.)
+    Uses the Save Page Now API, documented at
+    https://docs.google.com/document/d/1Nsv52MvSjbLb2PCpHlat0gkzw0EvtSgpKHu4mk0MnrA
 
     :param str url: The URL of the page to archive.
     :rtype: str | None
     :return: None if an archive could not be created. Otherwise, an archive.org URL.
     """
+    headers = {
+        "Accept": "application/json"
+    }
+    options = "?capture_outlinks=1&skip_first_archive=1"
+
+    # Tell Archive.org to queue a crawl and get the Job ID of it.
     try:
-        req = requests.get(f"https://web.archive.org/save/{url}", timeout=600, allow_redirects=False)
-        if req.status_code == 302:
-            archive_url = req.headers.get("Location")
-            logger.info(f"Created new archive link for {url}")
-            return archive_url
-        elif req.status_code == 429:
-            wait_time = req.headers.get("Retry-After")
-            # If no time is suggested, wait for 10 seconds.
-            if wait_time is None:
-                wait_time = 10
-            logger.info(
-                f"Rate limited while attempting to create archive for {url}. Retrying in {wait_time} seconds."
-            )
-            time.sleep(wait_time)
-            return create_archive(url)
-    except requests.ConnectTimeout as error:
-        logger.info(
-            f"Connection timed out while attempting to create archive for {url}. This usually indicates a rate limit. Retrying in 10 seconds."
-        )
-        time.sleep(10)
-        return create_archive(url)
+        req = requests.post(f"https://web.archive/org/save/{url}{options}", headers=headers)
     except requests.RequestException as error:
-        logger.error(f"Failed to create a new archive link for {url}: {error}")
+        logger.info(f"Failed to capture archive of {url}: Encountered an error while creating capture job: {error}")
+        return
+
+    job_id = req.json()["job_id"]
+
+    # Check the job status until completed.
+    status = "pending"
+    while status == "pending":
+        time.sleep(5)
+        try:
+            req = requests.get(f"https://web.archive.org/save/status/{job_id}", headers=headers)
+        except requests.RequestException as error:
+            logger.info(f"Failed to capture archive of {url}. Encountered an error while checking job status: {error}")
+            return
+        response = req.json()
+        status = response["status"]
+
+    if status == "success":
+        logger.info(f"Successfuly captured archive of {url}")
+        return f"https://web.archive.org/web/{response["timestamp"]/{url}}"
+    elif status == "error":
+        logger.info(f"Failed to capture archive of {url}. Archive.org reported {response["exception"]}")
         return
 
 
