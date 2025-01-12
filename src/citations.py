@@ -22,9 +22,9 @@ def create_archive(url: str) -> str | None:
     :return: None if an archive could not be created. Otherwise, an archive.org URL.
     """
     try:
-        req = requests.get(f"https://web.archive.org/save/{url}", timeout=600)
+        req = requests.get(f"https://web.archive.org/save/{url}", timeout=600, allow_redirects=False)
         if req.status_code == 302:
-            archive_url = req.url
+            archive_url = req.headers.get("Location")
             logger.info(f"Created new archive link for {url}")
             return archive_url
         elif req.status_code == 429:
