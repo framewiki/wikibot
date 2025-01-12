@@ -64,7 +64,7 @@ def create_archive(url: str) -> str | None:
 
     if status == "success":
         logger.info(f"Successfuly captured archive of {url}")
-        return f"https://web.archive.org/web/{response["timestamp"]/{url}}"
+        return f"https://web.archive.org/web/{response["timestamp"]}/{url}"
     elif status == "error":
         logger.info(f"Failed to capture archive of {url}. Wayback Machine reported {response["exception"]}")
         return
