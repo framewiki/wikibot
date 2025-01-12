@@ -1,7 +1,6 @@
 import logging
 import re
 import requests
-import threading
 import time
 from pathlib import Path
 
@@ -15,7 +14,8 @@ def create_archive(url: str) -> str | None:
     """Captures a new archive of the provided URL on the Archive.org Wayback Machine and returns
     the URL to it.
 
-    If the rate limit kicks in, retries infinitely (until the recursion limit) every 5 minutes.
+    If the rate limit kicks in, retries infinitely (until the recursion limit) after the suggested
+    amount of time (or every 10 seconds if no Retry-After header is provided.)
 
     :param str url: The URL of the page to archive.
     :rtype: str | None
