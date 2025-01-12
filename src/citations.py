@@ -10,8 +10,6 @@ import markdown
 
 logger = logging.getLogger(__name__)
 
-rate_limit_lock = threading.Lock()
-
 
 def create_archive(url: str) -> str | None:
     """Captures a new archive of the provided URL on the Archive.org Wayback Machine and returns
@@ -24,17 +22,23 @@ def create_archive(url: str) -> str | None:
     :return: None if an archive could not be created. Otherwise, an archive.org URL.
     """
     try:
-        rate_limit_lock.acquire()
-        rate_limit_lock.release()
-        archive_url = requests.get(f"https://web.archive.org/save/{url}", timeout=600).url
-        logger.info(f"Created new archive link for {url}")
-        return archive_url
+        req = requests.get(f"https://web.archive.org/save/{url}", timeout=600)
+        if req.status_code == 302:
+            archive_url = req.url
+            logger.info(f"Created new archive link for {url}")
+            return archive_url
+        elif req.status_code == 429:
+            wait_time = req.headers.get("Retry-After")
+            # If no time is suggested, wait for 10 seconds.
+            if wait_time is None:
+                wait_time = 10
+            logger.info(f"Rate limited while attempting to create archive for {url}. Waiting for {wait_time} seconds.")
+            time.sleep(wait_time)
+            return create_archive(url)
     except requests.ConnectionError as error:
         if error.args[0].reason.errno == 111:
-            logger.info(f"Rate-limited while creating new archive link for {url}. Waiting.")
-            rate_limit_lock.acquire()
-            time.sleep(300)
-            rate_limit_lock.release()
+            logger.info(f"Connection refused while while attempting to create archive for {url}. May be rate limited. Waiting for 10 seconds.")
+            time.sleep(10)
             return create_archive(url)
         else:
             logger.error(f"Failed to create a new archive link for {url}: {error}")
@@ -55,9 +59,9 @@ def find_archive(url: str) -> str | None:
     :return: None if an archive could not be located. Otherwise, an archive.org URL.
     """
     try:
-        archive = requests.get(f"https://archive.org/wayback/available?url={url}")
-        if archive.ok:
-            snapshots = archive.json()["archived_snapshots"]
+        req = requests.get(f"https://archive.org/wayback/available?url={url}")
+        if req.ok:
+            snapshots = req.json()["archived_snapshots"]
             closest = snapshots.get("closest")
             if closest and closest["available"] is True:
                 archive_url = closest["url"]
@@ -66,17 +70,17 @@ def find_archive(url: str) -> str | None:
             else:
                 return
         # If the API rate limits, wait for the suggested amount of time.
-        elif archive.status_code == 429:
-            wait_time = archive.headers.get("Retry-After")
+        elif req.status_code == 429:
+            wait_time = req.headers.get("Retry-After")
             # If no time is suggested, wait for 10 seconds.
             if wait_time is None:
                 wait_time = 10
-            logger.info(f"Rate limited while processing {url}. Waiting for {wait_time} seconds.")
+            logger.info(f"Rate limited while attempting to locate archive for {url}. Waiting for {wait_time} seconds.")
             time.sleep(wait_time)
             return find_archive(url)
         else:
             logger.error(
-                f"Failed to search for archived copy of {url}: Request returned HTTP status code {archive.status_code}"
+                f"Failed to search for archived copy of {url}: Request returned HTTP status code {req.status_code}"
             )
     except requests.RequestException as error:
         logger.error(f"Failed to search for archived copy of {url}: {error}")
