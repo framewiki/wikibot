@@ -154,12 +154,12 @@ def check_citations(page: Path) -> None:
             logger.debug(f"Link {url} is broken. Request raised exception: {error}")
 
         # If no archive is available and the primary link is not broken, create a new archive.
-        if archive_url is None and link_ok:
+        if not archive_url and link_ok:
             logger.debug(f"Failed to locate archive of {url}. Attempting to create.")
             archive_url = create_archive(url)
 
         # If no archive is available, log it.
-        if archive_url is None:
+        if not archive_url:
             if link_ok:
                 logger.info(f"No archived copy of {url} is available and none could be created.")
             else:
