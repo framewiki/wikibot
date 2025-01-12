@@ -26,11 +26,15 @@ def create_archive(url: str) -> str | None:
         "Accept": "application/json",
         "authorization": f"LOW {os.getenv("ARCHIVE_ACCESS_KEY")}:{os.getenv("ARCHIVE_SECRET_KEY")}"
     }
-    options = "?capture_outlinks=1&skip_first_archive=1"
+    data = {
+        "url": url,
+        "capture_outlinks": 1,
+        "skip_first_archive": 1
+    }
 
     # Tell Archive.org to queue a crawl and get the Job ID of it.
     try:
-        req = requests.post(f"https://web.archive.org/save/{url}{options}", headers=headers)
+        req = requests.post(f"https://web.archive.org/save", data=data, headers=headers)
     except requests.RequestException as error:
         logger.info(f"Failed to capture archive of {url}: Encountered an error while creating capture job: {error}")
         return
