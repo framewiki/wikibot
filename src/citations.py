@@ -98,7 +98,7 @@ def create_archive(url: str) -> str:
         logger.info(f"Successfuly captured archive of {url}")
         return f"https://web.archive.org/web/{response["timestamp"]}/{url}"
     elif status == "error":
-        raise CitationCaptureException(f"Wayback Machine reported {response["exception"]}")
+        raise CitationCaptureException(f"Wayback Machine reported {response["status_ext"]}")
 
 
 def find_archive(url: str) -> str | None:
