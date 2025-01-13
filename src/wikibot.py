@@ -1,11 +1,10 @@
-import concurrent
-import concurrent.futures
 import logging
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import citations
+
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +41,7 @@ def main() -> None:
     pages = list(repo.glob("**/*.md"))
 
     # Apply each check to every page.
-    #with concurrent.futures.ThreadPoolExecutor() as executor:
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
     #    executor.map(process_page, pages)
     for page in pages:
         process_page(page)
