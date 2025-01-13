@@ -1,6 +1,8 @@
+import concurrent.futures
 import logging
 import os
 import sys
+import traceback
 from pathlib import Path
 
 import citations
@@ -41,10 +43,17 @@ def main() -> None:
     pages = list(repo.glob("**/*.md"))
 
     # Apply each check to every page.
-    # with concurrent.futures.ThreadPoolExecutor() as executor:
-    #    executor.map(process_page, pages)
-    for page in pages:
-        process_page(page)
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        results = {executor.submit(process_page, page): page for page in pages}
+        # Get and log any exceptions with their tracebacks instead of ignoring them.
+        for thread in concurrent.futures.as_completed(results):
+            exception = thread.exception()
+            if exception:
+                tb = traceback.format_exception(exception)
+                tb_string = ""
+                for line in tb:
+                    tb_string += line
+                logger.error(f"\n```\n{tb_string}\n```")
 
 
 if __name__ == "__main__":
