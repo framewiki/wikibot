@@ -50,7 +50,7 @@ def create_archive(url: str) -> str:
     except requests.RequestException as error:
         raise CitationCaptureException(f"Encountered an error while creating capture job: {error}")
 
-    logger.debug(response)
+    logger.debug(f"Capture Request Response: {response}")
 
     job_id = response.get("job_id")
     if job_id is None:
@@ -91,7 +91,7 @@ def create_archive(url: str) -> str:
             )
 
         response = req.json()
-        logger.debug(response)
+        logger.debug(f"Status Check Response {response}")
         status = response["status"]
 
     if status == "success":
