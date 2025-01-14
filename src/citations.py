@@ -47,6 +47,11 @@ def create_archive(url: str) -> str:
     try:
         req = requests.post("https://web.archive.org/save", data=data, headers=headers)
         response = req.json()
+    except requests.ConnectionError as error:
+        logger.info(f"Encountered a Connection Error while creating capture job for {url}. Retrying in 5 seconds.")
+        logger.debug(f"ConnectionError for {url}: {error}")
+        time.sleep(5)
+        return create_archive(url)
     except requests.RequestException as error:
         raise CitationCaptureException(f"Encountered an error while creating capture job: {error}")
 
@@ -57,15 +62,19 @@ def create_archive(url: str) -> str:
         if response.get("status") == "error":
             error_code = response.get("status_ext")
             if error_code == "error:too-many-daily-captures-host":
+                logger.debug(f"Adding {host} to denylist.")
+                with host_denylist_lock:
+                    if not host in host_denylist:
+                        host_denylist.append(host)
                 raise CitationCaptureException(
                     f"The Wayback Machine has created too many captures of {host} today. Added to denylist for this run."
                 )
-            #elif error_code == "error:user-session-limit":
-                #logger.info(
-                #    f"Rate limited while attempting to create archive of {url} because there are too many active capture sessions. Retrying in 5 seconds."
-                #)
-                #time.sleep(5)
-                #return create_archive(url)
+            elif error_code == "error:user-session-limit":
+                logger.info(
+                    f"Rate limited while attempting to create archive of {url} because there are too many active capture sessions. Retrying in 5 seconds."
+                )
+                time.sleep(5)
+                return create_archive(url)
             else:
                 raise CitationCaptureException(
                     f"Wayback Machine reported {error_code} with the following message: {response.get("message")}"
@@ -80,6 +89,11 @@ def create_archive(url: str) -> str:
         time.sleep(5)
         try:
             req = requests.get(f"https://web.archive.org/save/status/{job_id}", headers=headers)
+        except requests.ConnectionError as error:
+            logger.info(f"Encountered a Connection Error while creating capture job for {url}. Retrying in 5 seconds.")
+            logger.debug(f"ConnectionError for {url}: {error}")
+            time.sleep(5)
+            return create_archive(url)
         except requests.RequestException as error:
             raise CitationCaptureException(
                 f"Encountered an error while checking job status: {error}"
