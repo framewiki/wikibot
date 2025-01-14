@@ -23,6 +23,9 @@ def create_archive(url: str) -> str:
     """Captures a new archive of the provided URL on the Archive.org Wayback Machine and returns
     the URL to it.
 
+    If a ConnectionError is encountered, retries infinitely (until the recursion limit) every 10
+    seconds.
+
     Uses the Save Page Now API, documented at
     https://docs.google.com/document/d/1Nsv52MvSjbLb2PCpHlat0gkzw0EvtSgpKHu4mk0MnrA
 
@@ -48,9 +51,9 @@ def create_archive(url: str) -> str:
         req = requests.post("https://web.archive.org/save", data=data, headers=headers)
         response = req.json()
     except requests.ConnectionError as error:
-        logger.info(f"Encountered a Connection Error while creating capture job for {url}. Retrying in 5 seconds.")
+        logger.info(f"Encountered a Connection Error while creating capture job for {url}. This usually indicates a rate limit. Retrying in 10 seconds.")
         logger.debug(f"ConnectionError for {url}: {error}")
-        time.sleep(5)
+        time.sleep(10)
         return create_archive(url)
     except requests.RequestException as error:
         raise CitationCaptureException(f"Encountered an error while creating capture job: {error}")
@@ -90,9 +93,9 @@ def create_archive(url: str) -> str:
         try:
             req = requests.get(f"https://web.archive.org/save/status/{job_id}", headers=headers)
         except requests.ConnectionError as error:
-            logger.info(f"Encountered a Connection Error while creating capture job for {url}. Retrying in 5 seconds.")
+            logger.info(f"Encountered a Connection Error while creating capture job for {url}. This usually indicates a rate limit. Retrying in 10 seconds.")
             logger.debug(f"ConnectionError for {url}: {error}")
-            time.sleep(5)
+            time.sleep(10)
             return create_archive(url)
         except requests.RequestException as error:
             raise CitationCaptureException(
@@ -151,7 +154,7 @@ def find_archive(url: str) -> str | None:
         return
 
 
-def check_url_reachable(url) -> bool:
+def check_url_reachable(url: str) -> tuple[bool, int]:
     """Checks whether a given URL is reachable.
     
     :param str url: The URL to check.
@@ -161,13 +164,15 @@ def check_url_reachable(url) -> bool:
     try:
         req = requests.get(url, timeout=10)
         link_ok = req.ok
+        status_code = req.status_code
         if link_ok is False:
-            logger.debug(f"Link {url} is broken. Server responded {req.status_code}")
+            logger.debug(f"Link {url} is broken. Server responded {status_code}")
     except requests.RequestException as error:
         link_ok = False
+        status_code = -1
         logger.debug(f"Link {url} is broken. Request raised exception: {error}")
 
-    return link_ok
+    return (link_ok, status_code)
 
 def check_citations(page: Path) -> None:
     """Checks that every footnote on a given page has a working primary link and an archive link.
@@ -232,23 +237,24 @@ def check_citations(page: Path) -> None:
         if archive_url is not None:
             logger.debug(f"Found archive link {archive_url} for primary url {url}")
 
-        # Check if the primary link is broken.
-
         # If no archive is available and the primary link is not broken, create a new archive.
         if archive_url is None:
-            link_ok = check_url_reachable(url)
+            link_ok, status_code = check_url_reachable(url)
             if link_ok is True:
                 logger.debug(f"Failed to locate archive of {url}. Attempting to create.")
                 try:
                     archive_url = create_archive(url)
                 except CitationCaptureException as error:
                     logger.warning(
-                        f"Footnote in {page.name} contains {url}, for which no archive is available and none could be created: {error}"
+                        f"Footnote in {page.name} contains link to {url}, for which no archive is available and none could be created: {error}"
                     )
                     continue
             else:
+                status_msg = ""
+                if status_code != -1:
+                    status_msg = f" (HTTP Status Code: {status_code})"
                 logger.warning(
-                    f"Footnote in {page.name} contains broken link to {url}. No archived copy could be located."
+                    f"Footnote in {page.name} contains broken link to {url}{status_msg}. No archived copy could be located."
                 )
                 continue
 
