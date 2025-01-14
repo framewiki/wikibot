@@ -51,7 +51,9 @@ def create_archive(url: str) -> str:
         req = requests.post("https://web.archive.org/save", data=data, headers=headers)
         response = req.json()
     except requests.ConnectionError as error:
-        logger.info(f"Encountered a Connection Error while creating capture job for {url}. This usually indicates a rate limit. Retrying in 10 seconds.")
+        logger.info(
+            f"Encountered a Connection Error while creating capture job for {url}. This usually indicates a rate limit. Retrying in 10 seconds."
+        )
         logger.debug(f"ConnectionError for capture of {url}: {error}")
         time.sleep(10)
         return create_archive(url)
@@ -93,7 +95,9 @@ def create_archive(url: str) -> str:
         try:
             req = requests.get(f"https://web.archive.org/save/status/{job_id}", headers=headers)
         except requests.ConnectionError as error:
-            logger.info(f"Encountered a Connection Error while creating capture job for {url}. This usually indicates a rate limit. Retrying in 10 seconds.")
+            logger.info(
+                f"Encountered a Connection Error while creating capture job for {url}. This usually indicates a rate limit. Retrying in 10 seconds."
+            )
             logger.debug(f"ConnectionError for status check of {url}: {error}")
             time.sleep(10)
             return create_archive(url)
@@ -156,7 +160,7 @@ def find_archive(url: str) -> str | None:
 
 def check_url_reachable(url: str) -> tuple[bool, int]:
     """Checks whether a given URL is reachable.
-    
+
     :param str url: The URL to check.
     :rtype: bool
     :returns: True if the URL is reachable. Otherwise False.
@@ -173,6 +177,7 @@ def check_url_reachable(url: str) -> tuple[bool, int]:
         logger.debug(f"Link {url} is broken. Request raised exception: {error}")
 
     return (link_ok, status_code)
+
 
 def check_citations(page: Path) -> None:
     """Checks that every footnote on a given page has a working primary link and an archive link.
