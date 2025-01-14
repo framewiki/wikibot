@@ -58,10 +58,9 @@ def create_archive(url: str) -> str:
             error_code = response.get("status_ext")
             if error_code == "error:too-many-daily-captures-host":
                 logger.debug(f"Adding {host} to denylist for this run.")
-                host_denylist_lock.acquire()
-                if host not in host_denylist:
-                    host_denylist.append(host)
-                host_denylist_lock.release()
+                with host_denylist_lock:
+                    if host not in host_denylist:
+                        host_denylist.append(host)
                 raise CitationCaptureException(
                     f"The Wayback Machine has created too many captures of {host} today. Added to denylist for this run."
                 )
