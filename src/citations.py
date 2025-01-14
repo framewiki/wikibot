@@ -60,12 +60,12 @@ def create_archive(url: str) -> str:
                 raise CitationCaptureException(
                     f"The Wayback Machine has created too many captures of {host} today. Added to denylist for this run."
                 )
-            elif error_code == "error:user-session-limit":
-                logger.info(
-                    f"Rate limited while attempting to create archive of {url} because there are too many active capture sessions. Retrying in 5 seconds."
-                )
-                time.sleep(5)
-                return create_archive(url)
+            #elif error_code == "error:user-session-limit":
+                #logger.info(
+                #    f"Rate limited while attempting to create archive of {url} because there are too many active capture sessions. Retrying in 5 seconds."
+                #)
+                #time.sleep(5)
+                #return create_archive(url)
             else:
                 raise CitationCaptureException(
                     f"Wayback Machine reported {error_code} with the following message: {response.get("message")}"
@@ -137,6 +137,24 @@ def find_archive(url: str) -> str | None:
         return
 
 
+def check_url_reachable(url) -> bool:
+    """Checks whether a given URL is reachable.
+    
+    :param str url: The URL to check.
+    :rtype: bool
+    :returns: True if the URL is reachable. Otherwise False.
+    """
+    try:
+        req = requests.get(url, timeout=10)
+        link_ok = req.ok
+        if link_ok is False:
+            logger.debug(f"Link {url} is broken. Server responded {req.status_code}")
+    except requests.RequestException as error:
+        link_ok = False
+        logger.debug(f"Link {url} is broken. Request raised exception: {error}")
+
+    return link_ok
+
 def check_citations(page: Path) -> None:
     """Checks that every footnote on a given page has a working primary link and an archive link.
 
@@ -201,30 +219,24 @@ def check_citations(page: Path) -> None:
             logger.debug(f"Found archive link {archive_url} for primary url {url}")
 
         # Check if the primary link is broken.
-        try:
-            req = requests.get(url)
-            link_ok = req.ok
-            if link_ok is False:
-                logger.debug(f"Link {url} is broken. Server responded {req.status_code}")
-        except requests.RequestException as error:
-            link_ok = False
-            logger.debug(f"Link {url} is broken. Request raised exception: {error}")
 
         # If no archive is available and the primary link is not broken, create a new archive.
-        if archive_url is None and link_ok is True:
-            logger.debug(f"Failed to locate archive of {url}. Attempting to create.")
-            try:
-                archive_url = create_archive(url)
-            except CitationCaptureException as error:
+        if archive_url is None:
+            link_ok = check_url_reachable(url)
+            if link_ok is True:
+                logger.debug(f"Failed to locate archive of {url}. Attempting to create.")
+                try:
+                    archive_url = create_archive(url)
+                except CitationCaptureException as error:
+                    logger.warning(
+                        f"Footnote in {page.name} contains {url}, for which no archive is available and none could be created: {error}"
+                    )
+                    continue
+            else:
                 logger.warning(
-                    f"Footnote in {page.name} contains {url}, for which no archive is available and none could be created: {error}"
+                    f"Footnote in {page.name} contains broken link to {url}. No archived copy could be located."
                 )
                 continue
-        elif link_ok is False:
-            logger.warning(
-                f"Footnote in {page.name} contains broken link to {url}. No archived copy could be located."
-            )
-            continue
 
         # Put archive_url on the page.
         logger.debug(f"Writing archive url {archive_url} to {page.name}")
