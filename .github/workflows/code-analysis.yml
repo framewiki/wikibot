@@ -3,8 +3,6 @@ name: Code Analysis
 on:
   pull_request:
     branches: [ main ]
-  push:
-    branches: [ main ]
 
 jobs:
   code_analysis:
@@ -13,6 +11,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
+        with:
+          ref: ${{ github.head_ref }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -33,13 +33,18 @@ jobs:
   
       - name: Black (Code Formatter)
         run: find . -type f -name "*.py" | xargs poetry run black
-
-      - name: Check for changes
-        id: changes
-        uses: UnicornGlobal/has-changes-action@v1.0.11
+      
+      - name: Check for Changes
+        run: |
+          if [[ $(git diff --stat) != '' ]]; then
+            echo "changes_detected=true" >> $GITHUB_ENV
+          else
+            echo "changes_detected=false" >> $GITHUB_ENV
+          fi
+    
     
       - name: Commit and Push Changes
-        if: steps.changes.outputs.changed == 1
+        if: env.changes_detected == 'true'
         run: |
           git config user.name code-analysis-action
           git config user.email github-actions@github.com
