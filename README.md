@@ -15,8 +15,8 @@ Wikibot is maintained by Framewiki. The [Framewiki Code of Conduct](https://fram
 
 ## TODO
 - [x] Find all Markdown files
-- [ ] Link Checking and Archiving
+- [x] Link Checking and Archiving
     - [x] If a link has an archive link, ignore it.
     - [x] If a link has no archive link and still exists, add an archive link.
-    - [ ] If a link has no archive link and does not exist, post a warning about it to the talk section.
+    - [x] If a link has no archive link and does not exist, post a warning about it in the pull request.
 - [ ] Populate description field based on first sentence.
