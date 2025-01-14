@@ -57,10 +57,6 @@ def create_archive(url: str) -> str:
         if response.get("status") == "error":
             error_code = response.get("status_ext")
             if error_code == "error:too-many-daily-captures-host":
-                logger.debug(f"Adding {host} to denylist for this run.")
-                with host_denylist_lock:
-                    if host not in host_denylist:
-                        host_denylist.append(host)
                 raise CitationCaptureException(
                     f"The Wayback Machine has created too many captures of {host} today. Added to denylist for this run."
                 )
@@ -80,8 +76,8 @@ def create_archive(url: str) -> str:
     # Check the job status until completed.
     status = "pending"
     while status == "pending":
-        time.sleep(5)
         logger.debug(f"Checking status of capture job {job_id} for url {url}")
+        time.sleep(5)
         try:
             req = requests.get(f"https://web.archive.org/save/status/{job_id}", headers=headers)
         except requests.RequestException as error:
