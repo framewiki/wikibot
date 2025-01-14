@@ -52,7 +52,7 @@ def create_archive(url: str) -> str:
         response = req.json()
     except requests.ConnectionError as error:
         logger.info(f"Encountered a Connection Error while creating capture job for {url}. This usually indicates a rate limit. Retrying in 10 seconds.")
-        logger.debug(f"ConnectionError for {url}: {error}")
+        logger.debug(f"ConnectionError for capture of {url}: {error}")
         time.sleep(10)
         return create_archive(url)
     except requests.RequestException as error:
@@ -94,7 +94,7 @@ def create_archive(url: str) -> str:
             req = requests.get(f"https://web.archive.org/save/status/{job_id}", headers=headers)
         except requests.ConnectionError as error:
             logger.info(f"Encountered a Connection Error while creating capture job for {url}. This usually indicates a rate limit. Retrying in 10 seconds.")
-            logger.debug(f"ConnectionError for {url}: {error}")
+            logger.debug(f"ConnectionError for status check of {url}: {error}")
             time.sleep(10)
             return create_archive(url)
         except requests.RequestException as error:
