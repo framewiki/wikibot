@@ -15,7 +15,7 @@ from exceptions import CitationCaptureException
 
 logger = logging.getLogger(__name__)
 
-host_denylist = []
+host_denylist = ["www.fastcompany.com", "www.techpowerup.com", "discord.com"]
 host_denylist_lock = threading.Lock()
 
 
