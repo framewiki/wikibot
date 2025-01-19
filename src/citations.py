@@ -34,11 +34,6 @@ def create_archive(url: str) -> str:
     :return: An archive.org URL to a newly-captured archive.
     :raises: exceptions.CitationCaptureException
     """
-    parsed_url = urllib.parse.urlparse(url)
-    host = parsed_url.hostname
-    if host in host_denylist:
-        raise CitationCaptureException(f"{host} is denylisted.")
-
     headers = {
         "Accept": "application/json",
         "authorization": f"LOW {os.getenv("ARCHIVE_ACCESS_KEY")}:{os.getenv("ARCHIVE_SECRET_KEY")}",
@@ -67,6 +62,8 @@ def create_archive(url: str) -> str:
         if response.get("status") == "error":
             error_code = response.get("status_ext")
             if error_code == "error:too-many-daily-captures-host":
+                parsed_url = urllib.parse.urlparse(url)
+                host = parsed_url.hostname
                 logger.debug(f"Adding {host} to denylist.")
                 with host_denylist_lock:
                     if host not in host_denylist:
@@ -220,6 +217,12 @@ def check_citations(page: Path) -> None:
 
         url = links[0].get("href")
         logger.debug(f"Checking citation {url} in {page.name}")
+
+        parsed_url = urllib.parse.urlparse(url)
+        host = parsed_url.hostname
+        if host in host_denylist:
+            logger.info(f"Skipping footnote to {url} in {page.name} because {host} is denylisted.")
+            continue
 
         # Check if there is an archive link.
         archive_link_present = False
