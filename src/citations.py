@@ -12,7 +12,6 @@ import requests
 
 from exceptions import CitationCaptureException
 
-
 logger = logging.getLogger(__name__)
 
 host_denylist = [
