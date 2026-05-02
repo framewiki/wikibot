@@ -7,7 +7,6 @@ from pathlib import Path
 
 import citations
 
-
 logger = logging.getLogger(__name__)
 
 
